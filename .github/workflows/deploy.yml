@@ -23,6 +23,6 @@ jobs:
       - name: Deploy to AWS CodeDeploy
         run: |
           aws deploy create-deployment \
-            --application-name ubuntoServer \
+            --application-name ubuntu_codedeploy_02 \
             --deployment-group-name ubuntuGrupoImplementacion \
             --s3-location bucket=myawsbucket-10d,key=subirUbuntu.zip,bundleType=zip
