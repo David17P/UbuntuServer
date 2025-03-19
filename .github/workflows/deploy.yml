@@ -18,7 +18,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }} # Cambia esto a tu región
+          aws-region: us-east-1 # Cambia esto a tu región
 
       - name: Deploy to AWS CodeDeploy
         run: |
@@ -26,3 +26,5 @@ jobs:
             --application-name servidorUbuntu \
             --deployment-group-name launch-wizard-4 \
             --s3-location bucket=myawsbucket-10dt bundleType=zip key=subirUbuntu.zip
+
+
