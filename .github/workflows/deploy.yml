@@ -24,5 +24,5 @@ jobs:
         run: |
           aws deploy create-deployment \
             --application-name servidorUbuntu \
-            --deployment-group-name launch-wizard-4 \
+            --deployment-group-name grupoUbuntu \
             --s3-location bucket=myawsbucket-10d,key=subirUbuntu.zip,bundleType=zip
