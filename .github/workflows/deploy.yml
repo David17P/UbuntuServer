@@ -25,6 +25,4 @@ jobs:
           aws deploy create-deployment \
             --application-name servidorUbuntu \
             --deployment-group-name launch-wizard-4 \
-            --s3-location bucket=myawsbucket-10dt bundleType=zip key=subirUbuntu.zip
-
-
+            --s3-location bucket=myawsbucket-10d,key=subirUbuntu.zip,bundleType=zip
