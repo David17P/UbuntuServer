@@ -26,20 +26,34 @@ jobs:
       - name: Check Quality Gate status
         id: check-quality-gate
         run: |
-          # Consulta el estado del Quality Gate usando la API de SonarCloud
-          RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=David17P_UbuntuServer")
+          MAX_RETRIES=10
+          RETRY_DELAY=30
+          COUNTER=0
           
-          # Imprime la respuesta completa de la API para depuración
-          echo "API Response: $RESPONSE"
-          
-          STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
+          while [ $COUNTER -lt $MAX_RETRIES ]; do
+            RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
+              "https://sonarcloud.io/api/qualitygates/project_status?projectKey=David17P_UbuntuServer")
+            
+            STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
 
-          # Muestra el estado del Quality Gate
-          echo "Quality Gate status: $STATUS"
+            echo "Intento $((COUNTER+1)) - Quality Gate status: $STATUS"
 
-          # Falla el workflow si el Quality Gate no es OK
-          if [ "$STATUS" != "OK" ]; then
-            REASON=$(echo "$RESPONSE" | jq -r '.projectStatus.conditions[] | select(.status != "OK") | "error " + .metricKey + ": " + .actualValue + " (expected " + .errorThreshold + ")"')
+            if [[ "$STATUS" != "NONE" ]]; then
+              break
+            fi
+
+            echo "El análisis aún no está disponible. Esperando $RETRY_DELAY segundos..."
+            sleep $RETRY_DELAY
+            COUNTER=$((COUNTER+1))
+          done
+
+          if [[ "$STATUS" == "NONE" ]]; then
+            echo "::error::El análisis no está disponible en SonarCloud después de varios intentos."
+            exit 1
+          fi
+
+          if [[ "$STATUS" != "OK" ]]; then
+            REASON=$(echo "$RESPONSE" | jq -r '.projectStatus.conditions[] | select(.status != "OK") | "Error en " + .metricKey + ": " + .actualValue + " (esperado " + .errorThreshold + ")"')
             echo "::error::$REASON"
             exit 1
           fi
