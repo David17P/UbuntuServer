@@ -20,6 +20,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1 # Cambia esto a tu región
 
+      - name: Zip the application
+        run: |
+          echo "Comprimiendo archivo"
+          zip -r subirUbuntu.zip . -x '*.git*' '*.github*' 'node_modules/*' 'vendor/*' # Excluye archivos innecesarios
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp subirUbuntu.zip s3://myawsbucket-10d/subirUbuntu.zip
+
       - name: Deploy to AWS CodeDeploy
         run: |
           aws deploy create-deployment \
