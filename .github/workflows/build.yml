@@ -21,7 +21,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Wait for SonarQube analysis to complete
-        run: sleep 120  # Espera 120 segundos (2 minutos) para que el análisis se complete
+        run: sleep 180  # Espera 120 segundos (2 minutos) para que el análisis se complete
 
       - name: Check Quality Gate status
         id: check-quality-gate
