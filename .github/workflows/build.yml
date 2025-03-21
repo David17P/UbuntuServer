@@ -21,39 +21,25 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Wait for SonarQube analysis to complete
-        run: sleep 180  # Espera 120 segundos (2 minutos) para que el análisis se complete
+        run: sleep 120  # Espera 120 segundos (2 minutos) para que el análisis se complete
 
       - name: Check Quality Gate status
         id: check-quality-gate
         run: |
-          MAX_RETRIES=10
-          RETRY_DELAY=30
-          COUNTER=0
+          # Consulta el estado del Quality Gate usando la API de SonarCloud
+          RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=David17P_UbuntuServer")
           
-          while [ $COUNTER -lt $MAX_RETRIES ]; do
-            RESPONSE=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" \
-              "https://sonarcloud.io/api/qualitygates/project_status?projectKey=David17P_UbuntuServer")
-            
-            STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
+          # Imprime la respuesta completa de la API para depuración
+          echo "API Response: $RESPONSE"
+          
+          STATUS=$(echo "$RESPONSE" | jq -r '.projectStatus.status')
 
-            echo "Intento $((COUNTER+1)) - Quality Gate status: $STATUS"
+          # Muestra el estado del Quality Gate
+          echo "Quality Gate status: $STATUS"
 
-            if [[ "$STATUS" != "NONE" ]]; then
-              break
-            fi
-
-            echo "El análisis aún no está disponible. Esperando $RETRY_DELAY segundos..."
-            sleep $RETRY_DELAY
-            COUNTER=$((COUNTER+1))
-          done
-
-          if [[ "$STATUS" == "NONE" ]]; then
-            echo "::error::El análisis no está disponible en SonarCloud después de varios intentos."
-            exit 1
-          fi
-
-          if [[ "$STATUS" != "OK" ]]; then
-            REASON=$(echo "$RESPONSE" | jq -r '.projectStatus.conditions[] | select(.status != "OK") | "Error en " + .metricKey + ": " + .actualValue + " (esperado " + .errorThreshold + ")"')
+          # Falla el workflow si el Quality Gate no es OK
+          if [ "$STATUS" != "OK" ]; then
+            REASON=$(echo "$RESPONSE" | jq -r '.projectStatus.conditions[] | select(.status != "OK") | "error " + .metricKey + ": " + .actualValue + " (expected " + .errorThreshold + ")"')
             echo "::error::$REASON"
             exit 1
           fi
